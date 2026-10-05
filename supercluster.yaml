@@ -1,0 +1,56 @@
+name: supercluster
+displayName: Supercluster
+
+tags: []
+authors: [ "Diff-fusion" ]
+categories: [ "Misc" ]
+difficulty: Medium
+description: |
+  I created a website that always shows the latest information about superclusters.
+  To show this stellar information to everyone the website is deployed in a kubernetes cluster.
+  But currently there are still some bugs.
+
+  I invite you as a beta tester to find these bugs for me.
+  You get restricted access to my cluster.
+  Different namespaces and security policies are in place to prevent you from reading my secrets.
+
+  To open the website connect with the ssh command and then open [http://localhost:8080](http://localhost:8080) in your browser.
+
+enabled: true
+release_cycle: second_cycle
+points: 100
+flag: "CSCG{supercluster,just_not_super_secure}"
+
+broker: supercluster
+
+deployment:
+  containers:
+    - image: supercluster
+      build: False
+      buildRoot: deploy
+      dockerfile: Dockerfile
+      pass_kvm_i_know_what_i_am_doing: true
+      resourceLimits:
+        memory: 4000
+        ephemeral_storage: 8000
+        cpu: 2000
+      startup_probe:
+        initial_delay_seconds: 60
+        period_seconds: 5
+        failure_threshold: 24
+        # check if ssh is ready
+        exec:
+          command:
+            - "ssh"
+            - "-o"
+            - "StrictHostKeyChecking=no"
+            - "-p"
+            - "2022"
+            - "ctf@127.0.0.1"
+            - "true"
+  ports:
+    - type: "ssh_proxy"
+      port: 2022
+      name:	"supercluster"
+      extra_args: "-L 127.0.0.1:8080:supercluster.flag:80"
+  networkPolicies: ["allow-outgoing"]

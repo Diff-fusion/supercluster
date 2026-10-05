@@ -1,0 +1,14 @@
+[Unit]
+Description=Port Forward of SSH Pod
+After=network.target
+After=entrypoint_user.service
+Requires=entrypoint_user.service
+
+[Service]
+Type=simple
+Restart=on-failure
+ExecStart=/usr/local/bin/port_forward_ssh.sh
+User=ctf
+
+[Install]
+WantedBy=multi-user.target

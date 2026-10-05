@@ -1,0 +1,12 @@
+{
+  "name": "Sloan Great Wall",
+  "description": "The Sloan Great Wall is a massive wall-like structure that is composed of thousands of galaxies and stretches over 1.37 billion light-years across the universe. It is one of the largest known structures in the universe and is thought to be a network of galaxy filaments.",
+  "galaxies": 100000,
+  "distance": 1.0,
+  "discoveryYear": 2003,
+  "interestingFacts": [
+    "The Sloan Great Wall is named after the Sloan Digital Sky Survey, which discovered the structure.",
+    "It is estimated that the Sloan Great Wall contains over 100,000 galaxies.",
+    "The Sloan Great Wall is approximately 1/60 of the diameter of the observable universe."
+  ]
+}

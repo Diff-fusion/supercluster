@@ -1,0 +1,61 @@
+FROM ubuntu:noble-20241118.1@sha256:80dd3c3b9c6cecb9f1667e9290b3bc61b78c2678c02cbdae5f0fea92cc6734ab
+ENV DEBIAN_FRONTEND=noninteractive
+RUN \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  : "${SOURCE_DATE_EPOCH:=$(stat --format=%Y /etc/apt/sources.list.d/ubuntu.sources)}" && \
+  snapshot="$(/bin/bash -euc "printf \"%(%Y%m%dT%H%M%SZ)T\n\" \"${SOURCE_DATE_EPOCH}\"")" && \
+  : "Enabling snapshot" && \
+  sed -i -e '/Types: deb/ a\Snapshot: true' /etc/apt/sources.list.d/ubuntu.sources && \
+  : "Enabling cache" && \
+  rm -f /etc/apt/apt.conf.d/docker-clean && \
+  echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >/etc/apt/apt.conf.d/keep-cache && \
+  : "Fetching the snapshot and installing ca-certificates in one command" && \
+  apt-get install --update --snapshot "${snapshot}" -o Acquire::Check-Valid-Until=false -o Acquire::https::Verify-Peer=false -y ca-certificates && \
+  : "Installing packages" && \
+  apt-get install --snapshot "${snapshot}" -y --no-install-recommends docker.io && \
+  : "Clean up for improving reproducibility (optional)" && \
+  rm -rf /var/log/* /var/cache/ldconfig/aux-cache
+
+ARG KUBERNETES_VERSION=1.31.5
+# install minikube and kubectl
+ADD --chown=root:root --chmod=0755 --checksum=sha256:75369b2d64543284232bcf7578b77d42953de213d1f19f745b414556239a3f0d \
+    https://github.com/kubernetes/minikube/releases/download/v1.35.0/minikube-linux-amd64 \
+    /usr/local/bin/minikube
+ADD --chown=root:root --chmod=0755 --checksum=sha256:fbecbfd375b3686002c2e81d51c390172f5ffba3d6b47920d55342cb03f557af \
+    https://dl.k8s.io/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl \
+    /usr/local/bin/kubectl
+
+# add non root user
+RUN \
+    useradd --create-home --comment "CTF image user" -s /bin/bash ctf && \
+    usermod -aG docker ctf && \
+    echo 'source <(kubectl completion bash)' >> /home/ctf/.bashrc && \
+    mkdir -p /usr/lib/systemd/system-preset && \
+    touch /usr/lib/systemd/system-preset/100-custom.preset && \
+    echo "enable entrypoint.service" >> /usr/lib/systemd/system-preset/100-custom.preset
+
+USER ctf
+
+# preload minikube images
+COPY --chown=ctf:ctf kicbase.tar \
+    /home/ctf/.minikube/cache/kic/amd64/kicbase_v0.0.46@sha256_fd2d445ddcc33ebc5c6b68a17e6219ea207ce63c005095ea1525296da2d1a279.tar
+ADD --chown=ctf:ctf --checksum=sha256:630b4b5a582d5687604e1fa3ec49d83cc0306c7903c70bb1242a74c122573f9c \
+    https://storage.googleapis.com/minikube-preloaded-volume-tarballs/v18/v$KUBERNETES_VERSION/preloaded-images-k8s-v18-v$KUBERNETES_VERSION-docker-overlay2-amd64.tar.lz4 \
+    /home/ctf/.minikube/cache/preloaded-tarball/
+ADD --chown=ctf:ctf --checksum=sha256:879add53ba3ed7e86bdb3b06d1ebb1f5e31b9a01e3bc57353d6385422febbd73 \
+    https://dl.k8s.io/release/v$KUBERNETES_VERSION/bin/linux/amd64/kubeadm \
+    /home/ctf/.minikube/cache/linux/amd64/v$KUBERNETES_VERSION/kubeadm
+
+COPY ./images /images
+COPY ./deploy /deploy
+COPY --chmod=755 \
+    ./entrypoint.sh \
+    ./entrypoint_user.sh \
+    ./port_forward_ssh.sh \
+    /usr/local/bin/
+COPY \
+    ./entrypoint.service \
+    ./entrypoint_user.service \
+    ./port_forward_ssh.service \
+    /etc/systemd/system/

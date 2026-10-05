@@ -1,0 +1,12 @@
+{
+  "name": "Coma Supercluster",
+  "description": "The Coma Supercluster is a large network of galaxies that is located about 300 million light-years away from Earth. It is one of the most well-studied superclusters in the universe and is composed of thousands of galaxies.",
+  "galaxies": 3000,
+  "distance": 0.3,
+  "discoveryYear": 1950,
+  "interestingFacts": [
+    "The Coma Supercluster is named after the constellation Coma Berenices, where it is located.",
+    "It is estimated that the Coma Supercluster contains over 3,000 galaxies.",
+    "The Coma Supercluster is thought to be one of the most well-studied superclusters in the universe, with numerous observations and studies."
+  ]
+}

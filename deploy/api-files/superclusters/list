@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Laniakea Supercluster",
+    "shortDescription": "A massive network of galaxy filaments that stretches over 500 million light-years across the universe.",
+    "image": "/images/laniakea-supercluster.png"
+  },
+  {
+    "name": "Shapley Supercluster",
+    "shortDescription": "A large network of galaxy filaments that is located about 650 million light-years away from Earth.",
+    "image": "/images/shapley-supercluster.png"
+  },
+  {
+    "name": "Sloan Great Wall",
+    "shortDescription": "A massive wall-like structure that is composed of thousands of galaxies and stretches over 1.37 billion light-years across the universe.",
+    "image": "/images/sloan-great-wall.png"
+  },
+  {
+    "name": "Coma Supercluster",
+    "shortDescription": "A large network of galaxy filaments that is located about 300 million light-years away from Earth.",
+    "image": "/images/coma-supercluster.png"
+  },
+  {
+    "name": "Virgo Supercluster",
+    "shortDescription": "A large network of galaxies that contains the Local Group and the Milky Way galaxy.",
+    "image": "/images/virgo-supercluster.gif"
+  }
+]

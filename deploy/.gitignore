@@ -1,0 +1,5 @@
+.env
+challenge.qcow2
+vm/images
+vm/kicbase.tar
+api-files/superclusters.tar.gz

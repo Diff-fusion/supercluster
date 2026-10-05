@@ -1,0 +1,12 @@
+{
+  "name": "Shapley Supercluster",
+  "description": "The Shapley Supercluster is a large network of galaxies that is located about 650 million light-years away from Earth. It is one of the most massive structures in the universe and is composed of thousands of galaxies.",
+  "galaxies": 8000,
+  "distance": 0.65,
+  "discoveryYear": 1932,
+  "interestingFacts": [
+    "The Shapley Supercluster is named after the American astronomer Harlow Shapley.",
+    "The Shapley Supercluster is located in the constellation of Centaurus.",
+    "The Shapley Supercluster is thought to be one of the most massive structures in the universe, with a total mass of over 10^16 solar masses."
+  ]
+}

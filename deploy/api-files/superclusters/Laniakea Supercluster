@@ -1,0 +1,12 @@
+{
+  "name": "Laniakea Supercluster",
+  "description": "The Laniakea Supercluster is a massive network of galaxy filaments that stretches over 500 million light-years across the universe. It is the largest known structure in the universe and is composed of thousands of galaxies.",
+  "galaxies": 100000,
+  "distance": 0.25,
+  "discoveryYear": 2014,
+  "interestingFacts": [
+    "The Laniakea Supercluster is named after the Hawaiian word for 'open sky' or 'wide sky'.",
+    "It is estimated that the Laniakea Supercluster contains over 100,000 galaxies.",
+    "The Laniakea Supercluster is thought to be one of the largest structures in the universe, stretching over 500 million light-years across."
+  ]
+}

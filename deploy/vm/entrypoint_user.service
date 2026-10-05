@@ -1,0 +1,15 @@
+[Unit]
+Description=User Entrypoint of Challenge Runner VM
+After=network.target
+After=entrypoint.service
+Requires=entrypoint.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Restart=no
+ExecStart=/usr/local/bin/entrypoint_user.sh
+User=ctf
+
+[Install]
+WantedBy=multi-user.target

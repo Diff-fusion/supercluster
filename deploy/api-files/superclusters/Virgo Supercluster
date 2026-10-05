@@ -1,0 +1,12 @@
+{
+  "name": "Virgo Supercluster",
+  "description": "The Virgo Supercluster is a large network of galaxy groups spanning over 110 million light-years. The superclusters contains the Local Group, which itself contains our own galaxy, the Milky Way.",
+  "galaxies": 47000,
+  "distance": 0.05,
+  "discoveryYear": 1950,
+  "interestingFacts": [
+    "The Virgo Supercluster is named after the constellation Virgo, where it is located.",
+    "Another name is the Local Supercluster.",
+    "The Virgo Supercluster is thought to be one of the closest superclusters to our own galaxy, the Milky Way, and is an important target for astronomical studies."
+  ]
+}
